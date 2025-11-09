@@ -1,14 +1,22 @@
 import logging
 import random
-from time import sleep
+from enum import Enum
 from typing import Optional
 
 from client.driver.browser_driver import BrowserDriver
 from client.scraping_client import ScraperClient
 from client.site.site_strategy import SiteStrategy
+from client.utils.browser_actions import random_driver_sleep, random_mouse_movement, random_scroll
+from common.selectors.foto_casa_selectors import FOTO_CASA_PAGES_NUMBER
 
 DEFAULT_TIMEOUT = 15000
 VERTICAL_SCROLL_JS = 'window.scrollTo(0, Y_COORDINATE)'
+
+
+class HumanAction(Enum):
+    SCROLL = 'scroll'
+    MOUSE_MOVE = 'mouse_move'
+    WAIT = 'wait'
 
 
 class ScrapingClientImpl(ScraperClient):
@@ -115,10 +123,49 @@ class ScrapingClientImpl(ScraperClient):
 
     def search_select(self, search_field_locator: str, value: str, option_number: int):
         self._driver.enter_text(search_field_locator, value)
-        sleep(random.uniform(0.5, 2.0))
+        self.human_wait()
         self._driver.arrow_key_down(option_number)
-        sleep(random.uniform(0.5, 2.0))
+        self.human_wait(micro_wait=True)
         self._driver.press_enter(search_field_locator)
 
     def scroll_to_element(self, element_locator: str):
         self._site_strategy.scroll_to_element(element_locator)
+
+    def human_wait(self, micro_wait: bool = False):
+        random_driver_sleep(self._driver, micro_wait=micro_wait)
+
+    def random_scroll(self):
+        """
+        Simulate random scrolling behavior and return to original position.
+        This helps mimic human browsing patterns to avoid bot detection.
+        """
+        if not self._driver:
+            raise RuntimeError("BrowserDriver is not set.")
+
+        random_scroll(self._driver)
+
+    def random_mouse_move(self):
+        """
+        Simulate random mouse movements on the page.
+        """
+        if not self._driver:
+            raise RuntimeError("BrowserDriver is not set.")
+        random_mouse_movement(self._driver)
+
+    def perform_random_human_action(self):
+        # choose a random action to perform
+        action = random.choice(list(HumanAction))
+        # perform the action using /client/utils/browser_actions.py functions
+        if action == HumanAction.SCROLL:
+            self.random_scroll()
+        elif action == HumanAction.MOUSE_MOVE:
+            self.random_mouse_move()
+        elif action == HumanAction.WAIT:
+            self.human_wait()
+
+    def extract_number_of_pages(self) -> int:
+        self._site_strategy.scroll_to_element(FOTO_CASA_PAGES_NUMBER)
+        number_of_pages = self._driver.query_selector(FOTO_CASA_PAGES_NUMBER).text_content()
+        if number_of_pages:
+            return int(number_of_pages)
+        return 1

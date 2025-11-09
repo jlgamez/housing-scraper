@@ -94,11 +94,16 @@ class BrowserDriver(ABC):
         pass
 
     @abstractmethod
-    def sroll_to_element(self, selector: str) -> None:
+    def scroll_to_element(self, selector: str) -> None:
         """Scroll the page to bring the specified element into view."""
         pass
 
     @abstractmethod
     def wait_for_timeout(self, ms: int) -> None:
         """Wait for the given number of milliseconds."""
+        pass
+
+    @abstractmethod
+    def go_back(self) -> None:
+        """Navigate back in browser history."""
         pass

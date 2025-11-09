@@ -19,7 +19,7 @@ ELEVATOR = '.icon-elevator, [alt*=\'ascensor\'], [title*=\'ascensor\']'  # Eleva
 
 # --- Other useful selectors ---
 LISTING_URL = 'a.listing-card-link'  # Link to detail page (for deduplication)
-
+FOTO_CASA_PAGES_NUMBER = '(//*[contains(@id, "pagination::") and contains(@id, "::item:")])[last()]'
 # -- Pagination ---
 FOTO_CASA_NO_RESULTS_MESSAGE = '.re-SearchNoResults'  # No results message (placeholder)
 
@@ -30,3 +30,4 @@ FOTO_CASA_SUBSCRIPTION_MODAL = '//*[@id="modal-react-portal"]/div/div'
 # fields/actions
 FOTO_CASA_SEARCH_BAR = '//*[@id="main-content"]/div/div/div/div[1]/div[2]/div/form/div[1]/div/div/div/div/input'
 FOTO_CASA_NEXT_PAGE_BUTTON = '//*[contains(@id, "pagination") and contains(@id, "next")]'
+FOTO_CASA_ALERT_BUTTON = '//*[@data-testid="fc-Save-search"]'

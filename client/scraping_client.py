@@ -48,3 +48,29 @@ class ScraperClient(ABC):
     def search_select(self, field_locator: str, value: str, option_number: int):
         """Fill an input field identified by a JavaScript string with a given value and select the option number."""
         pass
+
+    @abstractmethod
+    def human_wait(self):
+        """Simulate human-like waiting behavior."""
+        pass
+
+    @abstractmethod
+    def random_scroll(self):
+        """Simulate random scrolling behavior.
+        but comes back at the original position."""
+        pass
+
+    @abstractmethod
+    def random_mouse_move(self):
+        """Simulate random mouse movements on the page."""
+        pass
+
+    @abstractmethod
+    def perform_random_human_action(self):
+        """Perform a random human-like action on the page."""
+        pass
+
+    @abstractmethod
+    def extract_number_of_pages(self) -> int:
+        """Extract the total number of pages available."""
+        pass

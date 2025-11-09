@@ -5,15 +5,16 @@ from time import sleep
 from client.driver.browser_driver import BrowserDriver
 from client.site.site_strategy import SiteStrategy
 from common.selectors.foto_casa_selectors import FOTO_CASA_ACCEPT_COOKIES_BUTTON, \
-    FOTO_CASA_SUBSCRIPTION_MODAL, FOTO_CASA_NEXT_PAGE_BUTTON
+    FOTO_CASA_SUBSCRIPTION_MODAL, FOTO_CASA_NEXT_PAGE_BUTTON, FOTO_CASA_ALERT_BUTTON
 
 
 class FotoCasaStrategy(SiteStrategy):
 
-    def __init__(self, initial_url: str):
+    def __init__(self, listings_first_url: str):
         self._driver: BrowserDriver = None  # type: ignore
-        self._url = initial_url
+        self.listings_url = listings_first_url
         self._page_number = 1
+        self.pagination_blocked = False
 
     def set_driver(self, driver: BrowserDriver):
         self._driver = driver
@@ -48,12 +49,43 @@ class FotoCasaStrategy(SiteStrategy):
     def next_page(self) -> bool:
         if not self._driver:
             raise RuntimeError("Driver not set. Call set_driver() before navigating to next page.")
+
+        self.paginate_manually()
+
+    def update_listings_url(self):
+        """
+        Update the listings URL to navigate to the next page.
+        """
+        # Check if URL already has a page number
+        if self.listings_url.endswith('/l'):
+            # First time - append page 2
+            self._page_number = 2
+            self.listings_url = f"{self.listings_url}/{self._page_number}"
+        else:
+            # URL already has a page number, increment it
+            self._page_number += 1
+            # Replace the last number in the URL with the new page number
+            url_parts = self.listings_url.rsplit('/', 1)
+            self.listings_url = f"{url_parts[0]}/{self._page_number}"
+
+    def is_pagination_blocked(self):
         try:
-            self._driver.wait_for_selector(FOTO_CASA_NEXT_PAGE_BUTTON)
-            self._driver.click(FOTO_CASA_NEXT_PAGE_BUTTON)
-        except Exception as e:
-            logging.error(e)
+            self._driver.wait_for_selector(FOTO_CASA_ALERT_BUTTON, timeout=2000)
             return False
+        except Exception as e:
+            logging.info("No pagination alert found " + str(e))
+            return True
+
+    def paginate_manually(self):
+        """
+        Paginate by clicking the "Next Page" button.
+        """
+        if not self._driver:
+            raise RuntimeError("Driver not set. Call set_driver() before paginating manually.")
+
+        self.scroll_to_element(FOTO_CASA_NEXT_PAGE_BUTTON)
+        self._driver.wait_for_selector(FOTO_CASA_NEXT_PAGE_BUTTON)
+        self._driver.click(FOTO_CASA_NEXT_PAGE_BUTTON)
 
     def scroll_to_element(self, selector: str) -> None:
         """
@@ -74,4 +106,8 @@ class FotoCasaStrategy(SiteStrategy):
                 int(random.uniform(600, 800)))  # wait for random number of ms (200 - 400) to allow loading
 
         # Once found, scroll directly to it
-        self._driver.sroll_to_element(selector)
+        self._driver.scroll_to_element(selector)
+
+    def get_total_pages(self) -> int:
+
+        pass

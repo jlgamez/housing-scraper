@@ -1,6 +1,8 @@
+import random
 from typing import Any, List, Optional
 
-from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page, Playwright
+from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page, Playwright, ViewportSize
+from playwright_stealth import Stealth
 
 from client.driver.browser_driver import BrowserDriver
 from client.utils.headers import get_playwright_extra_headers, get_random_user_agent
@@ -26,6 +28,7 @@ class PlaywrightBrowserDriver(BrowserDriver):
         self._browser: Optional[Browser] = None
         self._context: Optional[BrowserContext] = None
         self._page: Optional[Page] = None
+        self._stealth_manager: Optional[Stealth] = None
 
     def __enter__(self):
         """Context manager entry - launches Playwright and browser."""
@@ -45,20 +48,45 @@ class PlaywrightBrowserDriver(BrowserDriver):
         if self._playwright is not None:
             raise RuntimeError("Browser already launched. Call close() first.")
 
+        # Initialize stealth manager
+        self._stealth_manager = Stealth()
+
+        # Start playwright normally
         self._playwright = sync_playwright().start()
+
         self._browser = self._playwright.chromium.launch(
             headless=headless,
-            args=['--disable-blink-features=AutomationControlled',
-                  '--disable-infobars',
-                  '--disable-blink-features',
-                  ]
+            args=[
+                '--disable-blink-features=AutomationControlled',
+                '--no-first-run',
+                '--no-default-browser-check',
+                '--disable-web-security',
+                '--allow-running-insecure-content',
+                '--disable-features=TranslateUI',
+                '--disable-component-extensions-with-background-pages',
+                '--disable-automation',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--no-sandbox',
+            ]
         )
+
+        # Randomize viewport size
+        viewport_width = random.randint(1280, 1920)
+        viewport_height = random.randint(720, 1080)
+
         self._context = self._browser.new_context(
             user_agent=get_random_user_agent(),
             locale='es-ES' if locale is None else locale,
-            extra_http_headers=get_playwright_extra_headers()
+            extra_http_headers=get_playwright_extra_headers(),
+            viewport=ViewportSize(width=viewport_width, height=viewport_height),
+            permissions=['geolocation'],
+            geolocation={'latitude': 40.4168, 'longitude': -3.7038},
+            timezone_id='Europe/Madrid'
         )
         self._page = self._context.new_page()
+        # Apply stealth to the page
+        self._stealth_manager.apply_stealth_sync(self._page)
 
     def close(self) -> None:
         """Close the browser instance and cleanup all resources."""
@@ -76,12 +104,21 @@ class PlaywrightBrowserDriver(BrowserDriver):
             if self._playwright:
                 self._playwright.stop()
                 self._playwright = None
+            if self._stealth_manager:
+                self._stealth_manager = None
 
     def new_page(self) -> Page:
-        """Open a new browser page/tab."""
+        """Open a new browser page/tab with stealth automatically applied."""
         if not self._context:
             raise RuntimeError("Browser not launched. Call launch() or use as context manager.")
-        return self._context.new_page()
+
+        page = self._context.new_page()
+
+        # Apply stealth to the new page
+        if self._stealth_manager:
+            self._stealth_manager.apply_stealth_sync(page)
+
+        return page
 
     def goto(self, url: str, wait_until: Optional[str] = None) -> None:
         """
@@ -164,7 +201,7 @@ class PlaywrightBrowserDriver(BrowserDriver):
         if not self._page:
             raise RuntimeError("No page available. Call launch() or use as context manager.")
 
-        self._page.evaluate(script)
+        return self._page.evaluate(script)
 
     def click_away(self, x: int, y: int) -> None:
         if not self._page:
@@ -187,7 +224,7 @@ class PlaywrightBrowserDriver(BrowserDriver):
         for _ in range(times):
             self._page.keyboard.press("ArrowDown")
 
-    def sroll_to_element(self, selector: str) -> None:
+    def scroll_to_element(self, selector: str) -> None:
         if not self._page:
             raise RuntimeError("No page available. Call launch() or use as context manager.")
         self._page.locator(selector).scroll_into_view_if_needed()
@@ -196,3 +233,8 @@ class PlaywrightBrowserDriver(BrowserDriver):
         if not self._page:
             raise RuntimeError("No page available. Call launch() or use as context manager.")
         self._page.wait_for_timeout(ms)
+
+    def go_back(self) -> None:
+        if not self._page:
+            raise RuntimeError("No page available. Call launch() or use as context manager.")
+        self._page.go_back()

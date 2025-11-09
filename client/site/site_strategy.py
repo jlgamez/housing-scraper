@@ -24,3 +24,8 @@ class SiteStrategy(ABC):
     def scroll_to_element(self, selector: str) -> None:
         """Scroll to an element identified by a selector."""
         pass
+
+    @abstractmethod
+    def get_total_pages(self) -> int:
+        """Get the total number of pages available."""
+        pass

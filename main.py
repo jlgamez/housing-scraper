@@ -1,14 +1,12 @@
 import logging
-import random
 
 from client.driver.browser_driver import BrowserDriver
 from client.driver.factory import get_browser_driver
 from client.scraping_client import ScraperClient
 from client.scraping_client_impl import ScrapingClientImpl
 from client.site.foto_casa_strategy import FotoCasaStrategy
-from client.utils.browser_actions import random_sleep
 from client.utils.headers import get_spain_locale
-from common.selectors.foto_casa_selectors import FOTO_CASA_SEARCH_BAR, FOTO_CASA_NEXT_PAGE_BUTTON
+from common.selectors.foto_casa_selectors import FOTO_CASA_SEARCH_BAR
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -16,12 +14,14 @@ logging.basicConfig(
 )
 
 FOTO_CASA_ENTRY_URL = 'https://www.fotocasa.es/es/'
+FOTO_CASA_LISTINGS_FIRST_URL = 'https://www.fotocasa.es/es/comprar/viviendas/barcelona-capital/sant-marti/l'
 
 if __name__ == '__main__':
     html = None
     driver: BrowserDriver = get_browser_driver()
-    foto_casa_strategy = FotoCasaStrategy(initial_url=FOTO_CASA_ENTRY_URL)
+    foto_casa_strategy = FotoCasaStrategy(listings_first_url=FOTO_CASA_LISTINGS_FIRST_URL)
 
+    # configure scraping client
     scraper_client: ScraperClient = (ScrapingClientImpl.Builder()
                                      .with_driver(driver=driver)
                                      .with_site_strategy(site_strategy=foto_casa_strategy)
@@ -30,40 +30,33 @@ if __name__ == '__main__':
                                      .with_timeout(timeout=2000)
                                      .build())
 
-    # configure scraping client
-    with  scraper_client as foto_casa:
-        try:
+    try:
+        with  scraper_client as foto_casa:
             foto_casa.visit_page(FOTO_CASA_ENTRY_URL)
             foto_casa.deflect_popups()
-            logging.info('popups deflected successfully. Attempting pagination...')
 
             logging.debug('performing human behaviour')
-            random_sleep()
-            foto_casa.vertical_scroll_to(str(random.randint(300, 1200)))
-            random_sleep()
-            foto_casa.vertical_scroll_to(str(0))
-            random_sleep()
+            foto_casa.perform_random_human_action()
+            foto_casa.human_wait()
 
             # search neighbourhood
             logging.info('search bar inputting...')
             foto_casa.search_select(FOTO_CASA_SEARCH_BAR, 'Sant Martí, Barcelona Capital', 1)
-            random_sleep()
+            foto_casa.human_wait()
             foto_casa.deflect_popups()
+            foto_casa.human_wait()
 
-            # random scrolling
-            logging.debug('random scrolling')
-            foto_casa.vertical_scroll_to(str(random.randint(500, 3200)))
-            random_sleep()
-            foto_casa.vertical_scroll_to(str(0))
+            # --- listings info extraction ----
 
-            # paginate
-            random_sleep()
-            foto_casa.scroll_to_element(FOTO_CASA_NEXT_PAGE_BUTTON)
-            random_sleep()
-            foto_casa.next_page()
-            random_sleep()
+            pages = foto_casa.extract_number_of_pages()
 
-        except Exception as exception:
-            logging.error(f"Exception obtaining page: {exception}")
-        finally:
-            SystemExit()
+            for page_number in range(1, pages):
+                logging.debug(f'performing pagination to number {page_number}')
+                foto_casa.next_page()
+                foto_casa.human_wait()
+                foto_casa.perform_random_human_action()
+
+    except Exception as exception:
+        logging.error(f"Exception obtaining page: {exception}")
+    finally:
+        SystemExit()
