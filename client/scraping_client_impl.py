@@ -7,7 +7,7 @@ from client.driver.browser_driver import BrowserDriver
 from client.scraping_client import ScraperClient
 from client.site.site_strategy import SiteStrategy
 from client.utils.browser_actions import random_driver_sleep, random_mouse_movement, random_scroll
-from common.selectors.foto_casa_selectors import FOTO_CASA_PAGES_NUMBER
+from common.locators.foto_casa_selectors import FOTO_CASA_PAGES_NUMBER
 
 DEFAULT_TIMEOUT = 15000
 VERTICAL_SCROLL_JS = 'window.scrollTo(0, Y_COORDINATE)'

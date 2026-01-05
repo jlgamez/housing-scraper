@@ -20,7 +20,7 @@ from typing import List, Optional
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from common.selectors.foto_casa_selectors import LISTING_CARD, ADDRESS
+from common.locators.foto_casa_selectors import LISTING_CARD, ADDRESS
 
 
 # -----------------------------

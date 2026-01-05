@@ -6,7 +6,7 @@ from client.scraping_client import ScraperClient
 from client.scraping_client_impl import ScrapingClientImpl
 from client.site.foto_casa_strategy import FotoCasaStrategy
 from client.utils.headers import get_spain_locale
-from common.selectors.foto_casa_selectors import FOTO_CASA_SEARCH_BAR
+from common.locators.foto_casa_selectors import FOTO_CASA_SEARCH_BAR
 
 logging.basicConfig(
     level=logging.DEBUG,

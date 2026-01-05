@@ -1,7 +1,7 @@
 """
-Centralized CSS selectors for Fotocasa listing card parsing.
+Centralized CSS locators for Fotocasa listing card parsing.
 
-Update these selectors after inspecting the actual HTML structure of Fotocasa result pages.
+Update these locators after inspecting the actual HTML structure of Fotocasa result pages.
 
 Pattern: one constant per field, grouped by context (listing card, fields, features).
 """
@@ -17,7 +17,7 @@ FLOOR = '.listing-card-floor'  # Floor field (placeholder)
 # --- Features/flags ---
 ELEVATOR = '.icon-elevator, [alt*=\'ascensor\'], [title*=\'ascensor\']'  # Elevator icon/text (placeholder)
 
-# --- Other useful selectors ---
+# --- Other useful locators ---
 LISTING_URL = 'a.listing-card-link'  # Link to detail page (for deduplication)
 FOTO_CASA_PAGES_NUMBER = '(//*[contains(@id, "pagination::") and contains(@id, "::item:")])[last()]'
 # -- Pagination ---

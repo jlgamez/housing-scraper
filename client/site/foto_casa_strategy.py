@@ -4,7 +4,7 @@ from time import sleep
 
 from client.driver.browser_driver import BrowserDriver
 from client.site.site_strategy import SiteStrategy
-from common.selectors.foto_casa_selectors import FOTO_CASA_ACCEPT_COOKIES_BUTTON, \
+from common.locators.foto_casa_selectors import FOTO_CASA_ACCEPT_COOKIES_BUTTON, \
     FOTO_CASA_SUBSCRIPTION_MODAL, FOTO_CASA_NEXT_PAGE_BUTTON, FOTO_CASA_ALERT_BUTTON
 
 
